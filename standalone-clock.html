@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MEGA Code Clock — ระบบบันทึกเวลาปฏิบัติงานและกิจกรรม</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --surface: #ffffff;
+      --surface-2: #f7f9fc;
+      --surface-3: #f0f4f9;
+      --hairline: #e3e8ef;
+      --border: #d0d8e2;
+      --border-strong: #aeb9c8;
+
+      --ink: #0c1727;
+      --ink-2: #2c3a52;
+      --ink-3: #5a6a82;
+      --ink-4: #8a96aa;
+
+      --navy: #0b2545;
+      --navy-2: #13325f;
+      --primary: #0c4a8e;
+      --primary-ink: #08305d;
+      --primary-soft: #e5eef9;
+
+      --critical: #b91c1c;
+      --critical-2: #7f1313;
+      --critical-soft: #fdecec;
+      --success: #047857;
+      --success-soft: #d1fae5;
+      --amber: #a16207;
+      --amber-soft: #fef3c7;
+
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-1: 0 1px 0 rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.05);
+      --shadow-2: 0 1px 0 rgba(15,23,42,.05), 0 6px 18px -8px rgba(15,23,42,.18);
+
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --sans: 'Sarabun', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font-family: inherit; cursor: pointer; }
+    input, select { font-family: inherit; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--navy);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-2);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: #ffffff;
+      color: var(--navy);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    .brand-text .h1 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: .3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-text .badge {
+      background: rgba(255,255,255,0.2);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: .6px;
+    }
+    .brand-text .h2 {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .status-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(0.7); }
+    }
+
+    .hbtn {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s;
+    }
+    .hbtn:hover { background: rgba(255,255,255,.2); }
+    .hbtn.synced { background: rgba(4,120,87,0.35); border-color: #34d399; color: #a7f3d0; }
+    .hbtn.pending { background: rgba(161,98,7,0.35); border-color: #facc15; color: #fef08a; }
+
+    /* Layout Container */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* Top Grid */
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 960px) {
+      .top-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Real-Time Clock Box */
+    .clock-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--hairline);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .clock-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .clock-label-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    .clock-thai-date {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .clock-big {
+      font-family: var(--mono);
+      font-size: clamp(48px, 7vw, 84px);
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 0.95;
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+      margin: 6px 0 14px;
+    }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--hairline);
+      padding-top: 12px;
+      margin-top: auto;
+    }
+    @media (max-width: 600px) {
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+    }
+    .chip .k {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--ink-3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .chip .v {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-ink);
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Round Card (Dark Navy) */
+    .round-card {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+      color: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .rc-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+    .rc-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rc-badge {
+      background: rgba(255,255,255,0.15);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .rc-val {
+      font-family: var(--mono);
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 800;
+      color: #fde047;
+      line-height: 1;
+      margin: 8px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .rc-sub {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .rc-actions {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 14px;
+      margin-top: 12px;
+    }
+    .btn-new-round {
+      flex: 1;
+      background: #eab308;
+      color: #0b2545;
+      border: 0;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background .15s, transform .05s;
+    }
+    .btn-new-round:hover { background: #facc15; }
+    .btn-new-round:active { transform: translateY(1px); }
+
+    .round-select {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      border-radius: var(--radius);
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .round-select option { background: var(--navy); color: #ffffff; }
+
+    /* Main Action & Participant Grid */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 960px) {
+      .action-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Time Stamp Form */
+    .form-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .form-title .tag {
+      font-size: 11px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+    .field label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-2);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      background: #ffffff;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus, .field select:focus {
+      outline: 0;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .type-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .tbtn {
+      padding: 8px 4px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--ink-2);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-align: center;
+      transition: all .15s;
+    }
+    .tbtn.active.check_in { background: #059669; color: #ffffff; border-color: #059669; }
+    .tbtn.active.checkpoint { background: #0284c7; color: #ffffff; border-color: #0284c7; }
+    .tbtn.active.check_out { background: #e11d48; color: #ffffff; border-color: #e11d48; }
+    .tbtn.active.note { background: #d97706; color: #ffffff; border-color: #d97706; }
+
+    .btn-stamp {
+      width: 100%;
+      background: var(--primary);
+      color: #ffffff;
+      border: 0;
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      box-shadow: 0 4px 14px rgba(12,74,142,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      transition: background .15s, transform .05s;
+    }
+    .btn-stamp:hover { background: var(--primary-ink); }
+    .btn-stamp:active { transform: translateY(1px); }
+
+    /* Roster Panel */
+    .roster-list {
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 10px 0;
+    }
+    .roster-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--hairline);
+      border-radius: 6px;
+    }
+    .roster-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+    }
+    .roster-sub {
+      font-size: 11px;
+      color: var(--ink-3);
+    }
+    .btn-quick-stamp {
+      background: var(--primary);
+      color: #ffffff;
+      border: 0;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      transition: background .15s;
+    }
+    .btn-quick-stamp:hover { background: var(--primary-ink); }
+
+    /* History Table */
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .table-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .table-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn-export {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-1);
+    }
+    .btn-export.excel { background: #166534; color: #ffffff; }
+    .btn-export.excel:hover { background: #14532d; }
+    .btn-export.pdf { background: var(--navy); color: #ffffff; }
+    .btn-export.pdf:hover { background: var(--navy-2); }
+    .btn-export.sync { background: var(--primary); color: #ffffff; }
+    .btn-export.sync:hover { background: var(--primary-ink); }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr 1fr;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 768px) {
+      .filter-bar { grid-template-columns: 1fr; }
+    }
+    .filter-bar input, .filter-bar select, .filter-bar button {
+      padding: 7px 10px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #ffffff;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+    th {
+      background: var(--navy);
+      color: #ffffff;
+      padding: 10px 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    tr:nth-child(even) { background: #fbfcfe; }
+    tr:hover { background: var(--surface-3); }
+
+    .badge-type {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      display: inline-block;
+      text-align: center;
+    }
+    .badge-type.check_in { background: #d1fae5; color: #047857; }
+    .badge-type.checkpoint { background: #e0f2fe; color: #0369a1; }
+    .badge-type.check_out { background: #ffe4e6; color: #be123c; }
+    .badge-type.note { background: #fef3c7; color: #b45309; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11,37,69,0.6);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+    }
+    .modal-head {
+      background: var(--navy);
+      color: #ffffff;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-head h3 { margin: 0; font-size: 15px; font-weight: 800; }
+    .modal-head .btn-close {
+      background: transparent;
+      border: 0;
+      color: #ffffff;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-foot {
+      padding: 12px 18px;
+      background: var(--surface-2);
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .modal-foot button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 0;
+    }
+    .modal-foot .btn-cancel { background: var(--surface); border: 1px solid var(--border); color: var(--ink-2); }
+    .modal-foot .btn-confirm { background: var(--primary); color: #ffffff; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.open { opacity: 1; }
+    .toast.warn { background: #b45309; }
+    .toast.err { background: #b91c1c; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">⏱</div>
+      <div class="brand-text">
+        <div class="h1">
+          <span>MEGA Code Clock</span>
+          <span class="badge">PRO EDITION</span>
+        </div>
+        <div class="h2">ระบบบันทึกเวลาปฏิบัติงานและกิจกรรม · Google Sheets Database</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-pill">
+        <span class="dot"></span>
+        <span>กำลังบันทึก (LIVE)</span>
+      </div>
+
+      <button id="btnSheets" class="hbtn" type="button" title="เชื่อมต่อ Google Sheets">
+        <span id="sheetsStatusIcon">⚙️</span>
+        <span id="sheetsStatusText">เชื่อมต่อ Google Sheets</span>
+      </button>
+
+      <button id="btnSound" class="hbtn" type="button" title="เปิด/ปิดเสียง">
+        <span id="soundIcon">🔊</span>
+        <span id="soundText">เสียงเปิด</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <div class="container">
+
+    <!-- Top Section: Digital Clock & Active Round Stopwatch -->
+    <div class="top-grid">
+      <!-- Real-time Clock Card -->
+      <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="clock-head">
+            <span class="clock-label">
+              <span class="clock-label-dot"></span>
+              เวลาปัจจุบัน (REAL-TIME CLOCK)
+            </span>
+            <span class="clock-thai-date" id="thaiDateDisplay">--:--:--</span>
+          </div>
+          <div class="clock-big" id="realtimeClockDisplay">00:00:00</div>
+        </div>
+
+        <div class="metrics-row">
+          <div class="chip">
+            <div class="k">รอบปัจจุบัน</div>
+            <div class="v" id="chipActiveRound">รอบที่ 1</div>
+          </div>
+          <div class="chip">
+            <div class="k">คนในรอบนี้</div>
+            <div class="v" id="chipRoundCount">0 คน</div>
+          </div>
+          <div class="chip">
+            <div class="k">บันทึกทั้งหมด</div>
+            <div class="v" id="chipTotalRecords">0 ครั้ง</div>
+          </div>
+          <div class="chip">
+            <div class="k">ซิงค์ชีต</div>
+            <div class="v" id="chipSyncStatus" style="font-size:14px; color:#059669;">พร้อมใช้งาน</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Round Card -->
+      <div class="round-card">
+        <div>
+          <div class="rc-head">
+            <span class="rc-label">
+              <span style="width:7px; height:7px; border-radius:50%; background:#facc15;"></span>
+              เวลารอบปัจจุบัน (ROUND STOPWATCH)
+            </span>
+            <span class="rc-badge" id="badgeActiveRound">รอบที่ 1</span>
+          </div>
+          <div class="rc-val" id="roundStopwatchDisplay">00:00</div>
+          <div class="rc-sub">
+            <span id="roundStartedLabel">เริ่มเมื่อ: --:--:--</span>
+            <span>นับเวลาต่อเนื่องในรอบนี้</span>
+          </div>
+        </div>
+
+        <div class="rc-actions">
+          <button id="btnNewRound" class="btn-new-round" type="button">
+            ➕ เริ่มรอบใหม่ (NEW ROUND)
+          </button>
+          <select id="selectRound" class="round-select">
+            <option value="รอบที่ 1">รอบที่ 1</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Entry Form & Quick Roster -->
+    <div class="action-grid">
+      <!-- Time Stamp Form -->
+      <div class="card">
+        <div class="form-title">
+          <span>⚡ กรอกข้อมูลและบันทึกเวลา (TIME STAMP ENTRY)</span>
+          <span class="tag" id="formActiveRoundTag">รอบที่ 1</span>
+        </div>
+
+        <form id="stampForm">
+          <div class="form-row">
+            <div class="field">
+              <label>ชื่อ <span style="color:#b91c1c;">*</span></label>
+              <input id="inputFirstName" type="text" placeholder="เช่น สมชาย, วิภาดา..." required autofocus />
+            </div>
+            <div class="field">
+              <label>นามสกุล</label>
+              <input id="inputLastName" type="text" placeholder="เช่น ใจดี, รักชาติ..." />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>รหัส / สังกัด / แผนก</label>
+              <input id="inputCode" type="text" placeholder="เช่น EMP-001, ทีม A, ER..." />
+            </div>
+            <div class="field">
+              <label>ประเภทการบันทึก</label>
+              <div class="type-buttons">
+                <button type="button" class="tbtn active check_in" data-type="check_in">เข้างาน</button>
+                <button type="button" class="tbtn checkpoint" data-type="checkpoint">เช็คพอยท์</button>
+                <button type="button" class="tbtn check_out" data-type="check_out">ออกงาน</button>
+                <button type="button" class="tbtn note" data-type="note">เหตุการณ์</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:12px;">
+            <label>หมายเหตุเพิ่มเติม</label>
+            <input id="inputNote" type="text" placeholder="เช่น ผ่านฐานทดสอบ 1, อุณหภูมิปกติ, ส่งต่อเวร..." />
+          </div>
+
+          <button type="submit" class="btn-stamp">
+            ⚡ กดบันทึกเวลาอัตโนมัติ (STAMP TIME NOW)
+          </button>
+        </form>
+      </div>
+
+      <!-- Quick Participant Roster -->
+      <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="form-title">
+            <span>👥 ผู้เข้าร่วมในรอบนี้</span>
+            <span class="tag" id="rosterCountTag">0 คน</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--ink-3); margin-bottom:8px;">
+            แตะปุ่มเพื่อบันทึกเวลาซ้ำให้อัตโนมัติ (สำหรับเช็คพอยท์หรือรอบต่อไปโดยไม่ต้องพิมพ์ใหม่)
+          </div>
+          <div id="rosterList" class="roster-list">
+            <div style="text-align:center; padding:30px 0; color:var(--ink-4); font-size:12px;">
+              ยังไม่มีผู้ลงเวลาในรอบนี้<br>พิมพ์ชื่อแล้วกดบันทึกเพื่อเพิ่มรายชื่อ
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--hairline); padding-top:10px;">
+          <button id="btnSyncPending" class="btn-export sync" style="width:100%; justify-content:center;" type="button">
+            🔄 ซิงค์ข้อมูลค้างส่ง (<span id="pendingCount">0</span> รายการ)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Table Card -->
+    <div class="card">
+      <div class="table-toolbar">
+        <div>
+          <div class="table-title">
+            <span style="width:10px; height:10px; border-radius:2px; background:var(--primary);"></span>
+            ตารางประวัติการบันทึกเวลา (TIME LOG HISTORY)
+          </div>
+          <div style="font-size:11.5px; color:var(--ink-3); margin-top:2px;">
+            เรียงตามเวลา ค้นหา แก้ไข และส่งออกเป็น Excel หรือ PDF ได้
+          </div>
+        </div>
+
+        <div class="table-actions">
+          <button id="btnExportExcel" class="btn-export excel" type="button">
+            📊 ส่งออก Excel
+          </button>
+          <button id="btnExportPdf" class="btn-export pdf" type="button">
+            🖨️ พิมพ์ / ส่งออก PDF
+          </button>
+          <button id="btnSyncNow" class="btn-export sync" type="button">
+            🔄 ซิงค์ Sheets
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <input id="searchQuery" type="text" placeholder="🔍 ค้นหาชื่อ, สกุล, รหัส, หมายเหตุ..." />
+        <select id="filterRound">
+          <option value="all">ทุกลำดับรอบ</option>
+        </select>
+        <select id="filterType">
+          <option value="all">ทุกประเภท</option>
+          <option value="check_in">เข้างาน</option>
+          <option value="checkpoint">เช็คพอยท์</option>
+          <option value="check_out">ออกงาน</option>
+          <option value="note">เหตุการณ์</option>
+        </select>
+        <button id="btnToggleSort" type="button" style="font-weight:700; cursor:pointer;">
+          ⬇️ ล่าสุดก่อน
+        </button>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px; text-align:center;">#</th>
+              <th style="width:110px;">รอบ</th>
+              <th style="width:90px; text-align:center;">เวลา</th>
+              <th style="width:90px; text-align:center;">เวลาในรอบ</th>
+              <th>ชื่อ - นามสกุล</th>
+              <th style="width:110px;">รหัส/สังกัด</th>
+              <th style="width:110px; text-align:center;">ประเภท</th>
+              <th>หมายเหตุ</th>
+              <th style="width:85px; text-align:center;">ซิงค์ชีต</th>
+              <th style="width:85px; text-align:center;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-3); margin-top:10px;">
+        <span id="tableCountSummary">แสดง 0 รายการ</span>
+        <span id="syncSummaryNotice">✓ ข้อมูลทั้งหมดถูกบันทึกแล้ว</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: New Round -->
+  <div id="modalNewRound" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>➕ เริ่มรอบใหม่ (Start New Round)</h3>
+        <button class="btn-close" onclick="closeModal('modalNewRound')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>ชื่อรอบใหม่</label>
+          <input id="inputNewRoundName" type="text" placeholder="เช่น รอบที่ 2, รอบกะบ่าย..." />
+        </div>
+        <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:10px; font-size:11.5px; color:#065f46; line-height:1.5;">
+          <b>ข้อมูลปลอดภัย:</b> การเริ่มรอบใหม่จะไม่ลบข้อมูลของรอบก่อนหน้า ข้อมูลทั้งหมดจะคงอยู่ในประวัติอย่างครบถ้วน
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal('modalNewRound')">ยกเลิก</button>
+        <button id="btnConfirmNewRound" class="btn-confirm">ยืนยันเริ่มรอบใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Record -->
+  <div id="modalEdit" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>✏️ แก้ไขข้อมูลบันทึกเวลา</h3>
+        <button class="btn-close" onclick="closeModal('modalEdit')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input id="editRecordId" type="hidden" />
+        <div class="form-row">
+          <div class="field">
+            <label>ชื่อ</label>
+            <input id="editFirstName" type="text" required />
+          </div>
+          <div class="field">
+            <label>นามสกุล</label>
+            <input id="editLastName" type="text" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>รอบ</label>
+            <select id="editRound"></select>
+          </div>
+          <div class="field">
+            <label>เวลา (HH:mm:ss)</label>
+            <input id="editTime" type="text" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>รหัส / สังกัด</label>
+            <input id="editCode" type="text" />
+          </div>
+          <div class="field">
+            <label>ประเภท</label>
+            <select id="editActionType">
+              <option value="check_in">เข้างาน</option>
+              <option value="checkpoint">เช็คพอยท์</option>
+              <option value="check_out">ออกงาน</option>
+              <option value="note">เหตุการณ์</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>หมายเหตุ</label>
+          <input id="editNote" type="text" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal('modalEdit')">ยกเลิก</button>
+        <button id="btnSaveEdit" class="btn-confirm">บันทึกการแก้ไข</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Google Sheets Setup -->
+  <div id="modalSheets" class="modal-overlay">
+    <div class="modal" style="max-width:580px;">
+      <div class="modal-head">
+        <h3>☁️ ตั้งค่าฐานข้อมูล Google Sheets</h3>
+        <button class="btn-close" onclick="closeModal('modalSheets')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Google Apps Script Web App URL</label>
+          <div style="display:flex; gap:8px;">
+            <input id="inputSheetsUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1; font-family:var(--mono); font-size:12px;" />
+            <button id="btnTestSheets" type="button" class="btn-export sync" style="white-space:nowrap;">ทดสอบ</button>
+          </div>
+        </div>
+
+        <div id="sheetsTestResult" style="display:none; padding:10px; border-radius:6px; font-size:12px;"></div>
+
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:12px; font-size:11.5px; line-height:1.6; color:var(--ink-2);">
+          <b>📋 ขั้นตอนการติดตั้งง่ายๆ:</b>
+          <ol style="margin:4px 0 0 16px; padding:0;">
+            <li>เปิด Google Sheets ใหม่</li>
+            <li>ไปที่เมนู <b>ส่วนขยาย (Extensions) &gt; Apps Script</b></li>
+            <li>นำโค้ดจากไฟล์ <code>google-apps-script/Code.gs</code> ไปวางทับ</li>
+            <li>กด <b>การทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้ใหม่ (New deployment)</b></li>
+            <li>เลือก <b>เว็บแอป (Web app)</b> และเลือกสิทธิ์เข้าถึง: <b>ทุกคน (Anyone)</b></li>
+            <li>คัดลอก URL ของเว็บแอปมาวางในช่องด้านบนนี้</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal('modalSheets')">ปิด</button>
+        <button id="btnSaveSheetsUrl" class="btn-confirm">บันทึก URL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">ข้อความแจ้งเตือน</div>
+
+  <!-- Application Logic -->
+  <script>
+    (function() {
+      'use strict';
+
+      const STORAGE_RECORDS = 'mega_code_clock_records_v2';
+      const STORAGE_ROUNDS = 'mega_code_clock_rounds_v2';
+      const STORAGE_ACTIVE_ROUND = 'mega_code_clock_active_round_v2';
+      const STORAGE_SHEETS_URL = 'mega_code_clock_sheets_url_v2';
+      const STORAGE_SOUND = 'mega_code_clock_sound_v2';
+
+      // State
+      let records = [];
+      let rounds = [{ id: 'round-1', name: 'รอบที่ 1', startedAt: Date.now() }];
+      let activeRound = 'รอบที่ 1';
+      let activeRoundStartedAt = Date.now();
+      let sheetsUrl = '';
+      let soundEnabled = true;
+      let currentActionType = 'check_in';
+      let sortOrder = 'desc';
+
+      // Audio
+      let audioCtx = null;
+      function playTone(freq, dur, type = 'sine') {
+        if (!soundEnabled) return;
+        try {
+          if (!audioCtx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioCtx();
+          }
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur / 1000);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur / 1000 + 0.05);
+        } catch (e) {}
+      }
+
+      function chimeSuccess() {
+        playTone(659, 100, 'triangle');
+        setTimeout(() => playTone(880, 150, 'sine'), 90);
+      }
+      function chimeNewRound() {
+        playTone(523, 110);
+        setTimeout(() => playTone(659, 110), 100);
+        setTimeout(() => playTone(784, 180), 200);
+      }
+
+      function toast(msg, type = 'ok') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast open ' + (type !== 'ok' ? type : '');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.className = 'toast', 2500);
+      }
+
+      // Formatters
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function fmtClock(d) {
+        if (!d) return '00:00:00';
+        return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+      }
+      function fmtDateThai(d) {
+        if (!d) return '';
+        const days = ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
+        const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        return days[d.getDay()] + 'ที่ ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+      }
+
+      function getActionLabel(t) {
+        switch(t) {
+          case 'check_in': return 'เข้างาน';
+          case 'checkpoint': return 'เช็คพอยท์';
+          case 'check_out': return 'ออกงาน';
+          case 'note': return 'เหตุการณ์';
+          default: return t;
+        }
+      }
+
+      // Local Storage
+      function loadState() {
+        try {
+          const rec = localStorage.getItem(STORAGE_RECORDS);
+          if (rec) records = JSON.parse(rec);
+          const r = localStorage.getItem(STORAGE_ROUNDS);
+          if (r) rounds = JSON.parse(r);
+          const ar = localStorage.getItem(STORAGE_ACTIVE_ROUND);
+          if (ar) activeRound = ar;
+          const su = localStorage.getItem(STORAGE_SHEETS_URL);
+          if (su) sheetsUrl = su;
+          const snd = localStorage.getItem(STORAGE_SOUND);
+          if (snd !== null) soundEnabled = (snd === 'true');
+
+          const found = rounds.find(x => x.name === activeRound);
+          if (found) activeRoundStartedAt = found.startedAt;
+        } catch(e) {}
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_RECORDS, JSON.stringify(records));
+        localStorage.setItem(STORAGE_ROUNDS, JSON.stringify(rounds));
+        localStorage.setItem(STORAGE_ACTIVE_ROUND, activeRound);
+        localStorage.setItem(STORAGE_SHEETS_URL, sheetsUrl);
+        localStorage.setItem(STORAGE_SOUND, String(soundEnabled));
+      }
+
+      // Realtime Clock Loop
+      function tick() {
+        const now = new Date();
+        document.getElementById('realtimeClockDisplay').textContent = fmtClock(now);
+        document.getElementById('thaiDateDisplay').textContent = fmtDateThai(now);
+
+        if (activeRoundStartedAt) {
+          const sec = Math.max(0, Math.floor((now.getTime() - activeRoundStartedAt) / 1000));
+          const m = Math.floor(sec / 60);
+          const s = sec % 60;
+          document.getElementById('roundStopwatchDisplay').textContent = pad(m) + ':' + pad(s);
+        }
+      }
+
+      // Render Everything
+      function render() {
+        // Headers & Badges
+        document.getElementById('chipActiveRound').textContent = activeRound;
+        document.getElementById('badgeActiveRound').textContent = activeRound;
+        document.getElementById('formActiveRoundTag').textContent = 'รอบ: ' + activeRound;
+        document.getElementById('roundStartedLabel').textContent = 'เริ่มเมื่อ: ' + fmtClock(new Date(activeRoundStartedAt));
+
+        // Sound Button
+        document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+        document.getElementById('soundText').textContent = soundEnabled ? 'เสียงเปิด' : 'ปิดเสียง';
+
+        // Sheets Button & Chip
+        const unsynced = records.filter(r => !r.synced).length;
+        const btnSheets = document.getElementById('btnSheets');
+        const chipSync = document.getElementById('chipSyncStatus');
+        if (sheetsUrl) {
+          if (unsynced > 0) {
+            btnSheets.className = 'hbtn pending';
+            document.getElementById('sheetsStatusIcon').textContent = '⏳';
+            document.getElementById('sheetsStatusText').textContent = 'ค้างส่ง ' + unsynced + ' รายการ';
+            chipSync.textContent = 'ค้าง ' + unsynced + ' รายการ';
+            chipSync.style.color = '#b45309';
+          } else {
+            btnSheets.className = 'hbtn synced';
+            document.getElementById('sheetsStatusIcon').textContent = '☁️';
+            document.getElementById('sheetsStatusText').textContent = 'Sheets เชื่อมต่อแล้ว';
+            chipSync.textContent = 'ซิงค์เรียบร้อย';
+            chipSync.style.color = '#047857';
+          }
+        } else {
+          btnSheets.className = 'hbtn';
+          document.getElementById('sheetsStatusIcon').textContent = '⚙️';
+          document.getElementById('sheetsStatusText').textContent = 'ตั้งค่า Google Sheets';
+          chipSync.textContent = 'ออฟไลน์';
+          chipSync.style.color = '#64748b';
+        }
+
+        // Stats Chips
+        document.getElementById('chipTotalRecords').textContent = records.length + ' ครั้ง';
+        const inThisRound = records.filter(r => r.round === activeRound);
+        const uniqueParticipants = new Set(inThisRound.map(r => r.fullName)).size;
+        document.getElementById('chipRoundCount').textContent = uniqueParticipants + ' คน';
+        document.getElementById('rosterCountTag').textContent = uniqueParticipants + ' คน';
+        document.getElementById('pendingCount').textContent = unsynced;
+
+        // Populate Round Selectors
+        const selRound = document.getElementById('selectRound');
+        const filterRound = document.getElementById('filterRound');
+        const curFilter = filterRound.value;
+
+        selRound.innerHTML = rounds.map(r => `<option value="${r.name}" ${r.name === activeRound ? 'selected' : ''}>${r.name}</option>`).join('');
+        filterRound.innerHTML = '<option value="all">ทุกลำดับรอบ</option>' + rounds.map(r => `<option value="${r.name}" ${r.name === curFilter ? 'selected' : ''}>${r.name}</option>`).join('');
+
+        renderRoster();
+        renderTable();
+      }
+
+      // Render Quick Roster
+      function renderRoster() {
+        const rosterList = document.getElementById('rosterList');
+        const participants = [];
+        const seen = new Set();
+
+        records.filter(r => r.round === activeRound).forEach(r => {
+          if (!seen.has(r.fullName)) {
+            seen.add(r.fullName);
+            const count = records.filter(x => x.round === activeRound && x.fullName === r.fullName).length;
+            participants.push({ firstName: r.firstName, lastName: r.lastName, fullName: r.fullName, count });
+          }
+        });
+
+        if (participants.length === 0) {
+          rosterList.innerHTML = `
+            <div style="text-align:center; padding:30px 0; color:var(--ink-4); font-size:12px;">
+              ยังไม่มีผู้ลงเวลาในรอบนี้<br>พิมพ์ชื่อแล้วกดบันทึกเพื่อเพิ่มรายชื่อ
+            </div>
+          `;
+          return;
+        }
+
+        rosterList.innerHTML = participants.map((p, idx) => `
+          <div class="roster-item">
+            <div>
+              <div class="roster-name">${p.fullName}</div>
+              <div class="roster-sub">บันทึกแล้ว ${p.count} ครั้ง</div>
+            </div>
+            <button type="button" class="btn-quick-stamp" data-fn="${p.firstName}" data-ln="${p.lastName}">
+              ⏱️ แสตมป์
+            </button>
+          </div>
+        `).join('');
+
+        rosterList.querySelectorAll('.btn-quick-stamp').forEach(btn => {
+          btn.addEventListener('click', () => {
+            stampRecord(btn.dataset.fn, btn.dataset.ln);
+          });
+        });
+      }
+
+      // Render History Table
+      function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const query = document.getElementById('searchQuery').value.toLowerCase().trim();
+        const fRound = document.getElementById('filterRound').value;
+        const fType = document.getElementById('filterType').value;
+
+        let filtered = [...records];
+        if (query) {
+          filtered = filtered.filter(r =>
+            r.fullName.toLowerCase().includes(query) ||
+            r.code.toLowerCase().includes(query) ||
+            r.round.toLowerCase().includes(query) ||
+            r.note.toLowerCase().includes(query) ||
+            r.time.includes(query)
+          );
+        }
+        if (fRound !== 'all') filtered = filtered.filter(r => r.round === fRound);
+        if (fType !== 'all') filtered = filtered.filter(r => r.actionType === fType);
+
+        filtered.sort((a, b) => sortOrder === 'desc' ? b.timestamp - a.timestamp : a.timestamp - b.timestamp);
+
+        document.getElementById('tableCountSummary').textContent = `แสดง ${filtered.length} จากทั้งหมด ${records.length} รายการ`;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="10" style="text-align:center; padding:30px; color:var(--ink-4);">
+                ไม่พบข้อมูลที่ตรงกับเงื่อนไข
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map((r, i) => `
+          <tr>
+            <td style="text-align:center; font-family:var(--mono);">${i + 1}</td>
+            <td><span style="background:var(--primary-soft); color:var(--primary); padding:2px 8px; border-radius:4px; font-weight:700; font-size:11px;">${r.round}</span></td>
+            <td style="font-family:var(--mono); text-align:center; font-weight:700;">${r.time}</td>
+            <td style="font-family:var(--mono); text-align:center; color:var(--ink-3);">${r.elapsedInRound}</td>
+            <td><b>${r.fullName}</b></td>
+            <td>${r.code || '-'}</td>
+            <td style="text-align:center;"><span class="badge-type ${r.actionType}">${r.actionLabel}</span></td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.note}">${r.note || '-'}</td>
+            <td style="text-align:center;">${r.synced ? '<span style="color:#047857;">☁️ สำเร็จ</span>' : '<span style="color:#d97706;">⏳ รอซิงค์</span>'}</td>
+            <td style="text-align:center;">
+              <button type="button" class="btn-edit" data-id="${r.id}" style="background:none; border:0; color:var(--primary); font-size:14px;">✏️</button>
+              <button type="button" class="btn-del" data-id="${r.id}" style="background:none; border:0; color:#b91c1c; font-size:14px; margin-left:4px;">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.id)));
+        tbody.querySelectorAll('.btn-del').forEach(b => b.addEventListener('click', () => deleteRecord(b.dataset.id)));
+      }
+
+      // Stamp Time Record
+      function stampRecord(fnOverride, lnOverride) {
+        const fn = (fnOverride !== undefined ? fnOverride : document.getElementById('inputFirstName').value).trim();
+        const ln = (lnOverride !== undefined ? lnOverride : document.getElementById('inputLastName').value).trim();
+
+        if (!fn) {
+          toast('กรุณากรอกชื่อก่อนบันทึกเวลา', 'warn');
+          playTone(300, 150);
+          document.getElementById('inputFirstName').focus();
+          return;
+        }
+
+        const now = new Date();
+        const id = 'REC_' + now.getTime() + '_' + Math.floor(Math.random() * 1000);
+        const dateStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+        const timeStr = fmtClock(now);
+
+        const sec = Math.max(0, Math.floor((now.getTime() - activeRoundStartedAt) / 1000));
+        const elapsedStr = pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
+
+        const codeVal = document.getElementById('inputCode').value.trim();
+        const noteVal = document.getElementById('inputNote').value.trim();
+
+        const rec = {
+          id,
+          no: records.length + 1,
+          date: dateStr,
+          time: timeStr,
+          timestamp: now.getTime(),
+          round: activeRound,
+          firstName: fn,
+          lastName: ln,
+          fullName: (fn + ' ' + ln).trim(),
+          code: codeVal,
+          actionType: currentActionType,
+          actionLabel: getActionLabel(currentActionType),
+          elapsedInRound: elapsedStr,
+          note: noteVal,
+          synced: false
+        };
+
+        records.unshift(rec);
+        saveState();
+        render();
+
+        chimeSuccess();
+        toast(`✅ บันทึกเวลา ${rec.fullName} (${timeStr}) สำเร็จ!`);
+
+        if (fnOverride === undefined) {
+          document.getElementById('inputFirstName').value = '';
+          document.getElementById('inputLastName').value = '';
+          document.getElementById('inputNote').value = '';
+          document.getElementById('inputFirstName').focus();
+        }
+
+        if (sheetsUrl.trim()) syncToSheets(rec);
+      }
+
+      // Google Sheets Sync
+      function syncToSheets(rec) {
+        if (!sheetsUrl.trim()) return;
+        fetch(sheetsUrl.trim(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'add', record: rec })
+        }).then(() => {
+          rec.synced = true;
+          saveState();
+          render();
+        }).catch(err => console.warn('Sync failed', err));
+      }
+
+      function syncAllPending() {
+        if (!sheetsUrl.trim()) {
+          toast('กรุณาตั้งค่า Google Sheets Web App URL ก่อน', 'warn');
+          openModal('modalSheets');
+          return;
+        }
+        const pending = records.filter(r => !r.synced);
+        if (pending.length === 0) {
+          toast('ข้อมูลทั้งหมดซิงค์กับ Google Sheets แล้ว');
+          return;
+        }
+        toast(`กำลังส่งข้อมูล ${pending.length} รายการไปยัง Google Sheets...`);
+        fetch(sheetsUrl.trim(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'batchAdd', records: pending })
+        }).then(() => {
+          pending.forEach(r => r.synced = true);
+          saveState();
+          render();
+          chimeSuccess();
+          toast(`ซิงค์ข้อมูล ${pending.length} รายการสำเร็จ!`);
+        }).catch(err => toast('เกิดข้อผิดพลาดในการซิงค์', 'err'));
+      }
+
+      // Export Excel
+      function exportExcel() {
+        if (records.length === 0) {
+          toast('ยังไม่มีข้อมูลสำหรับส่งออก', 'warn');
+          return;
+        }
+        const headers = ['ลำดับ', 'รอบ', 'วันที่', 'เวลา', 'เวลาในรอบ', 'ชื่อ', 'นามสกุล', 'ชื่อ-สกุล', 'รหัส/สังกัด', 'ประเภท', 'หมายเหตุ', 'ซิงค์ชีต'];
+        const rows = records.map((r, i) => [
+          i + 1,
+          `"${r.round}"`,
+          `"${r.date}"`,
+          `"${r.time}"`,
+          `"${r.elapsedInRound}"`,
+          `"${r.firstName}"`,
+          `"${r.lastName}"`,
+          `"${r.fullName}"`,
+          `"${r.code}"`,
+          `"${r.actionLabel}"`,
+          `"${(r.note || '').replace(/"/g, '""')}"`,
+          `"${r.synced ? 'ซิงค์แล้ว' : 'รอดำเนินการ'}"`
+        ]);
+
+        const csv = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `MEGA_CodeClock_Export_${Date.now()}.csv`;
+        a.click();
+        chimeSuccess();
+        toast('ส่งออกไฟล์ Excel (CSV UTF-8) เรียบร้อยแล้ว');
+      }
+
+      // Export PDF / Print
+      function exportPdf() {
+        if (records.length === 0) {
+          toast('ยังไม่มีข้อมูลสำหรับพิมพ์', 'warn');
+          return;
+        }
+        const w = window.open('', '_blank');
+        if (!w) {
+          toast('โปรดอนุญาตหน้าต่างป๊อปอัพเพื่อพิมพ์รายงาน', 'warn');
+          return;
+        }
+        const totalP = new Set(records.map(r => r.fullName)).size;
+        const totalR = new Set(records.map(r => r.round)).size;
+        const rowsHtml = records.map((r, i) => `
+          <tr>
+            <td style="text-align:center;">${i+1}</td>
+            <td><b>${r.round}</b></td>
+            <td style="text-align:center; font-family:'JetBrains Mono',monospace;">${r.time}</td>
+            <td style="text-align:center; font-family:'JetBrains Mono',monospace;">${r.elapsedInRound}</td>
+            <td><b>${r.fullName}</b> ${r.code ? `(${r.code})` : ''}</td>
+            <td>${r.actionLabel}</td>
+            <td>${r.note || '-'}</td>
+          </tr>
+        `).join('');
+
+        const html = `
+          <!doctype html><html><head><meta charset="utf-8"><title>รายงานเวลา · MEGA Code Clock</title>
+          <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+          <style>
+            body { font-family:'Sarabun',sans-serif; margin:20px; font-size:12.5px; color:#0c1727; }
+            h1 { margin:0; color:#0b2545; font-size:20px; font-weight:800; }
+            table { width:100%; border-collapse:collapse; margin-top:16px; }
+            th, td { border:1px solid #cbd5e1; padding:7px 9px; }
+            th { background:#0b2545; color:#fff; font-weight:700; }
+            @media print { .no-print { display:none; } }
+          </style>
+          </head><body>
+          <div class="no-print" style="margin-bottom:16px;">
+            <button onclick="window.print()" style="padding:8px 16px; background:#0b2545; color:#fff; font-weight:700; border:0; border-radius:4px; cursor:pointer;">🖨️ พิมพ์เอกสาร / บันทึก PDF</button>
+          </div>
+          <h1>รายงานสรุปการบันทึกเวลา · MEGA CODE CLOCK</h1>
+          <p style="margin:4px 0 16px; color:#64748b;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')} | จำนวนรอบ: ${totalR} | จำนวนผู้เข้าร่วม: ${totalP} คน | รายการทั้งหมด: ${records.length} ครั้ง</p>
+          <table>
+            <thead><tr><th style="width:40px;">#</th><th>รอบ</th><th>เวลา</th><th>เวลาในรอบ</th><th>ชื่อ-นามสกุล</th><th>ประเภท</th><th>หมายเหตุ</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          <div style="margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; text-align:center;">
+            <div><p>ลงชื่อ..........................................................</p><p><b>( ผู้บันทึกเวลา )</b></p></div>
+            <div><p>ลงชื่อ..........................................................</p><p><b>( ผู้รับรองผล / หัวหน้างาน )</b></p></div>
+          </div>
+          </body></html>
+        `;
+        w.document.write(html);
+        w.document.close();
+      }
+
+      // Modals
+      window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
+      window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+
+      function openEditModal(id) {
+        const r = records.find(x => x.id === id);
+        if (!r) return;
+        document.getElementById('editRecordId').value = r.id;
+        document.getElementById('editFirstName').value = r.firstName;
+        document.getElementById('editLastName').value = r.lastName;
+        document.getElementById('editTime').value = r.time;
+        document.getElementById('editCode').value = r.code || '';
+        document.getElementById('editNote').value = r.note || '';
+        document.getElementById('editActionType').value = r.actionType;
+
+        const editRound = document.getElementById('editRound');
+        editRound.innerHTML = rounds.map(x => `<option value="${x.name}" ${x.name === r.round ? 'selected' : ''}>${x.name}</option>`).join('');
+
+        openModal('modalEdit');
+      }
+
+      function deleteRecord(id) {
+        const r = records.find(x => x.id === id);
+        if (!r) return;
+        if (confirm(`คุณต้องการลบข้อมูลของ "${r.fullName}" ใช่หรือไม่?`)) {
+          records = records.filter(x => x.id !== id);
+          saveState();
+          render();
+          playTone(300, 150);
+          toast(`ลบข้อมูล ${r.fullName} เรียบร้อยแล้ว`, 'warn');
+
+          if (sheetsUrl.trim()) {
+            fetch(sheetsUrl.trim(), {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'delete', id })
+            }).catch(e => console.warn(e));
+          }
+        }
+      }
+
+      // Wire DOM Events
+      function wire() {
+        // Sound
+        document.getElementById('btnSound').addEventListener('click', () => {
+          soundEnabled = !soundEnabled;
+          saveState();
+          render();
+        });
+
+        // Stamp Form
+        document.getElementById('stampForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          stampRecord();
+        });
+
+        // Type Buttons
+        document.querySelectorAll('.type-buttons .tbtn').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('.type-buttons .tbtn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            currentActionType = b.dataset.type;
+          });
+        });
+
+        // New Round Button
+        document.getElementById('btnNewRound').addEventListener('click', () => {
+          document.getElementById('inputNewRoundName').value = `รอบที่ ${rounds.length + 1}`;
+          openModal('modalNewRound');
+        });
+
+        document.getElementById('btnConfirmNewRound').addEventListener('click', () => {
+          const name = document.getElementById('inputNewRoundName').value.trim() || `รอบที่ ${rounds.length + 1}`;
+          const now = Date.now();
+          rounds.push({ id: 'round-' + now, name, startedAt: now });
+          activeRound = name;
+          activeRoundStartedAt = now;
+          saveState();
+          closeModal('modalNewRound');
+          render();
+          chimeNewRound();
+          toast(`🏁 เริ่ม ${name} เรียบร้อยแล้ว`);
+        });
+
+        document.getElementById('selectRound').addEventListener('change', (e) => {
+          activeRound = e.target.value;
+          const found = rounds.find(r => r.name === activeRound);
+          if (found) activeRoundStartedAt = found.startedAt;
+          saveState();
+          render();
+        });
+
+        // Edit Save
+        document.getElementById('btnSaveEdit').addEventListener('click', () => {
+          const id = document.getElementById('editRecordId').value;
+          const r = records.find(x => x.id === id);
+          if (!r) return;
+          r.firstName = document.getElementById('editFirstName').value.trim();
+          r.lastName = document.getElementById('editLastName').value.trim();
+          r.fullName = (r.firstName + ' ' + r.lastName).trim();
+          r.time = document.getElementById('editTime').value.trim();
+          r.round = document.getElementById('editRound').value;
+          r.code = document.getElementById('editCode').value.trim();
+          r.actionType = document.getElementById('editActionType').value;
+          r.actionLabel = getActionLabel(r.actionType);
+          r.note = document.getElementById('editNote').value.trim();
+          r.synced = false;
+
+          saveState();
+          closeModal('modalEdit');
+          render();
+          chimeSuccess();
+          toast('บันทึกการแก้ไขข้อมูลเรียบร้อยแล้ว');
+
+          if (sheetsUrl.trim()) {
+            fetch(sheetsUrl.trim(), {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'update', id: r.id, record: r })
+            }).catch(e => console.warn(e));
+          }
+        });
+
+        // Sheets Modal & Test
+        document.getElementById('btnSheets').addEventListener('click', () => {
+          document.getElementById('inputSheetsUrl').value = sheetsUrl;
+          openModal('modalSheets');
+        });
+
+        document.getElementById('btnTestSheets').addEventListener('click', () => {
+          const url = document.getElementById('inputSheetsUrl').value.trim();
+          const resEl = document.getElementById('sheetsTestResult');
+          if (!url) {
+            resEl.style.display = 'block';
+            resEl.style.background = '#fef2f2';
+            resEl.style.color = '#991b1b';
+            resEl.textContent = 'กรุณากรอก Web App URL';
+            return;
+          }
+          resEl.style.display = 'block';
+          resEl.style.background = '#f0f9ff';
+          resEl.style.color = '#0369a1';
+          resEl.textContent = 'กำลังทดสอบเชื่อมต่อ...';
+
+          const ping = url + (url.includes('?') ? '&' : '?') + 'action=ping';
+          fetch(ping).then(r => r.json()).then(data => {
+            if (data.status === 'success') {
+              resEl.style.background = '#ecfdf5';
+              resEl.style.color = '#065f46';
+              resEl.textContent = `✓ เชื่อมต่อสำเร็จ! แผ่นงาน "${data.sheetName}" พร้อมใช้งาน (${data.totalRows} แถว)`;
+              chimeSuccess();
+            } else {
+              throw new Error(data.message || 'Error');
+            }
+          }).catch(err => {
+            resEl.style.background = '#fef2f2';
+            resEl.style.color = '#991b1b';
+            resEl.textContent = 'เชื่อมต่อไม่สำเร็จ: ' + err.message + ' (ตรวจดูว่าสิทธิ์เข้าถึงเป็น Anyone หรือยัง)';
+          });
+        });
+
+        document.getElementById('btnSaveSheetsUrl').addEventListener('click', () => {
+          sheetsUrl = document.getElementById('inputSheetsUrl').value.trim();
+          saveState();
+          closeModal('modalSheets');
+          render();
+          toast('บันทึกการตั้งค่า Google Sheets แล้ว');
+        });
+
+        // Filters
+        document.getElementById('searchQuery').addEventListener('input', renderTable);
+        document.getElementById('filterRound').addEventListener('change', renderTable);
+        document.getElementById('filterType').addEventListener('change', renderTable);
+        document.getElementById('btnToggleSort').addEventListener('click', () => {
+          sortOrder = (sortOrder === 'desc') ? 'asc' : 'desc';
+          document.getElementById('btnToggleSort').textContent = sortOrder === 'desc' ? '⬇️ ล่าสุดก่อน' : '⬆️ เก่าสุดก่อน';
+          renderTable();
+        });
+
+        // Sync & Export Buttons
+        document.getElementById('btnSyncPending').addEventListener('click', syncAllPending);
+        document.getElementById('btnSyncNow').addEventListener('click', syncAllPending);
+        document.getElementById('btnExportExcel').addEventListener('click', exportExcel);
+        document.getElementById('btnExportPdf').addEventListener('click', exportPdf);
+      }
+
+      // Init
+      function init() {
+        loadState();
+        wire();
+        render();
+        setInterval(tick, 250);
+      }
+
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+  </script>
+</body>
+</html>
