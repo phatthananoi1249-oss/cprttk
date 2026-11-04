@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 <div className="navbar bg-base-100 shadow-sm">
   <div className="navbar-start">
     <div className="dropdown">
@@ -57,6 +57,10 @@ interface RoundInfo {
   name: string;
   startedAt: number;
   endedAt?: number;
+}
+
+function generateRecordId(timestamp: number): string {
+  return `REC_${timestamp}_${Math.floor(Math.random() * 1000)}`;
 }
 
 const LOCAL_STORAGE_KEY = "mega_code_clock_records_v2";
@@ -171,9 +175,6 @@ export default function TimeClockPage() {
   // Initial Load from LocalStorage
   // ==========================================
   useEffect(() => {
-    const now = new Date();
-    setCurrentTime(now);
-
     try {
       const storedRecords = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedRecords) {
@@ -186,7 +187,8 @@ export default function TimeClockPage() {
         loadedRounds = JSON.parse(storedRounds);
         setRounds(loadedRounds);
       } else {
-        loadedRounds = [{ id: "round-1", name: "รอบที่ 1", startedAt: now.getTime() }];
+        const nowMs = Date.now();
+        loadedRounds = [{ id: "round-1", name: "รอบที่ 1", startedAt: nowMs }];
         setRounds(loadedRounds);
       }
 
@@ -195,7 +197,9 @@ export default function TimeClockPage() {
       setActiveRound(activeName);
 
       const foundRound = loadedRounds.find((x) => x.name === activeName);
-      setActiveRoundStartedAt(foundRound ? foundRound.startedAt : now.getTime());
+      if (foundRound) {
+        setActiveRoundStartedAt(foundRound.startedAt);
+      }
 
       const storedUrl = localStorage.getItem(SHEETS_URL_KEY);
       if (storedUrl) {
@@ -224,11 +228,7 @@ export default function TimeClockPage() {
 
   useEffect(() => {
     localStorage.setItem(ACTIVE_ROUND_KEY, activeRound);
-    const r = rounds.find((x) => x.name === activeRound);
-    if (r) {
-      setActiveRoundStartedAt(r.startedAt);
-    }
-  }, [activeRound, rounds]);
+  }, [activeRound]);
 
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, String(soundEnabled));
@@ -314,12 +314,11 @@ export default function TimeClockPage() {
     if (!fn) {
       showToast("กรุณากรอกชื่อก่อนบันทึกเวลา", "warn");
       playBeep(300, 150);
-      firstNameInputRef.current?.focus();
       return;
     }
 
     const now = new Date();
-    const id = `REC_${now.getTime()}_${Math.floor(Math.random() * 1000)}`;
+    const id = generateRecordId(now.getTime());
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const timeStr = formatClock(now);
 
@@ -353,7 +352,6 @@ export default function TimeClockPage() {
       setFirstName("");
       setLastName("");
       setNote("");
-      firstNameInputRef.current?.focus();
     }
 
     // ซิงค์ไปยัง Google Sheets ทันที (ถ้ามี URL)
@@ -882,61 +880,54 @@ export default function TimeClockPage() {
   // ==========================================
   // Filtered & Sorted Records
   // ==========================================
-  const filteredRecords = useMemo(() => {
-    let result = [...records];
+  let filteredRecords = [...records];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (r) =>
-          r.fullName.toLowerCase().includes(q) ||
-          r.firstName.toLowerCase().includes(q) ||
-          r.lastName.toLowerCase().includes(q) ||
-          r.code.toLowerCase().includes(q) ||
-          r.round.toLowerCase().includes(q) ||
-          r.note.toLowerCase().includes(q) ||
-          r.time.includes(q)
-      );
-    }
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase().trim();
+    filteredRecords = filteredRecords.filter(
+      (r) =>
+        r.fullName.toLowerCase().includes(q) ||
+        r.firstName.toLowerCase().includes(q) ||
+        r.lastName.toLowerCase().includes(q) ||
+        r.code.toLowerCase().includes(q) ||
+        r.round.toLowerCase().includes(q) ||
+        r.note.toLowerCase().includes(q) ||
+        r.time.includes(q)
+    );
+  }
 
-    if (filterRound !== "all") {
-      result = result.filter((r) => r.round === filterRound);
-    }
+  if (filterRound !== "all") {
+    filteredRecords = filteredRecords.filter((r) => r.round === filterRound);
+  }
 
-    if (filterType !== "all") {
-      result = result.filter((r) => r.actionType === filterType);
-    }
+  if (filterType !== "all") {
+    filteredRecords = filteredRecords.filter((r) => r.actionType === filterType);
+  }
 
-    result.sort((a, b) => {
-      return sortOrder === "desc" ? b.timestamp - a.timestamp : a.timestamp - b.timestamp;
-    });
-
-    return result;
-  }, [records, searchQuery, filterRound, filterType, sortOrder]);
+  filteredRecords.sort((a, b) => {
+    return sortOrder === "desc" ? b.timestamp - a.timestamp : a.timestamp - b.timestamp;
+  });
 
   // สรุปข้อมูลผู้เข้าร่วมในรอบปัจจุบันสำหรับ Quick Roster
-  const currentRoundParticipants = useMemo(() => {
-    const list: { firstName: string; lastName: string; fullName: string; count: number }[] = [];
-    const seen = new Set<string>();
+  const currentRoundParticipants: { firstName: string; lastName: string; fullName: string; count: number }[] = [];
+  const seenRoster = new Set<string>();
 
-    records
-      .filter((r) => r.round === activeRound)
-      .forEach((r) => {
-        if (!seen.has(r.fullName)) {
-          seen.add(r.fullName);
-          const count = records.filter((x) => x.round === activeRound && x.fullName === r.fullName).length;
-          list.push({
-            firstName: r.firstName,
-            lastName: r.lastName,
-            fullName: r.fullName,
-            count,
-          });
-        }
-      });
-    return list;
-  }, [records, activeRound]);
+  records
+    .filter((r) => r.round === activeRound)
+    .forEach((r) => {
+      if (!seenRoster.has(r.fullName)) {
+        seenRoster.add(r.fullName);
+        const count = records.filter((x) => x.round === activeRound && x.fullName === r.fullName).length;
+        currentRoundParticipants.push({
+          firstName: r.firstName,
+          lastName: r.lastName,
+          fullName: r.fullName,
+          count,
+        });
+      }
+    });
 
-  const unsyncedCount = useMemo(() => records.filter((r) => !r.synced).length, [records]);
+  const unsyncedCount = records.filter((r) => !r.synced).length;
 
   return (
     <div className="min-h-screen bg-[#eef2f6] text-[#0c1727] flex flex-col font-sans select-none">
