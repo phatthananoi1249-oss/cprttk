@@ -244,10 +244,13 @@ export function MedicalReportModal({
         </div>
 
         <div class="doc-header">
-          <div class="hosp-title">
-            <h1>THATAKIAB HOSPITAL · ER RESUSCITATION RECORD</h1>
-            <h2>โรงพยาบาลท่าตะเกียบ · ใบบันทึกการช่วยฟื้นคืนชีพและเหตุการณ์ฉุกเฉิน (CPR Log Sheet)</h2>
-            <p>กลุ่มงานการพยาบาลผู้ป่วยอุบัติเหตุและฉุกเฉิน (ER & Code Blue) · พิมพ์เมื่อ: ${currentDateStr}</p>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <img src="/thatakiab-logo.png" alt="Thatakiab Hospital Logo" style="width: 58px; height: 58px; object-fit: contain;" />
+            <div class="hosp-title">
+              <h1>THATAKIAB HOSPITAL · ER RESUSCITATION RECORD</h1>
+              <h2>โรงพยาบาลท่าตะเกียบ · ใบบันทึกการช่วยฟื้นคืนชีพและเหตุการณ์ฉุกเฉิน (CPR Log Sheet)</h2>
+              <p>กลุ่มงานการพยาบาลผู้ป่วยอุบัติเหตุและฉุกเฉิน (ER & Code Blue) · พิมพ์เมื่อ: ${currentDateStr}</p>
+            </div>
           </div>
           <div class="status-badge" style="background:${hasRosc ? "#047857" : "#0b2545"}">
             <div class="main">${hasRosc ? "💚 ROSC ACHIEVED" : "THATAKIAB HOSPITAL"}</div>

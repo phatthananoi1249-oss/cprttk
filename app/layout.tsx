@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "Thatakiab Hospital · ER Code Clock ระบบบันทึกเวลาช่วยฟื้นคืนชีพ",
   description: "ระบบบันทึกเวลาช่วยฟื้นคืนชีพและเหตุการณ์ฉุกเฉิน โรงพยาบาลท่าตะเกียบ (Thatakiab Hospital) ฐานข้อมูล Google Sheets",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/thatakiab-logo.png",
   },
 };
 
