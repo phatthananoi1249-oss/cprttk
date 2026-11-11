@@ -17,8 +17,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MEGA Code Clock · ระบบบันทึกเวลาปฏิบัติงานและกิจกรรม",
-  description: "ระบบบันทึกเวลาระดับมืออาชีพ พร้อม Google Sheets เป็นฐานข้อมูล โทนสี Navy Blue & White",
+  title: "Thatakiab Hospital · ER Code Clock ระบบบันทึกเวลาช่วยฟื้นคืนชีพ",
+  description: "ระบบบันทึกเวลาช่วยฟื้นคืนชีพและเหตุการณ์ฉุกเฉิน โรงพยาบาลท่าตะเกียบ (Thatakiab Hospital) ฐานข้อมูล Google Sheets",
   icons: {
     icon: "/favicon.ico",
   },

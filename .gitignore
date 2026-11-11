@@ -23,6 +23,11 @@
 # misc
 .DS_Store
 Thumbs.db
+# credentials & secrets
+key.json
+*key*.json
+*credentials*.json
+service-account*.json
 *.pem
 
 # IDEs and editors
